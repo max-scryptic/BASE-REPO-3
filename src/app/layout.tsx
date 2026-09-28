@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { APP_NAME } from "@/components/brand-logo";
 import { EmDashGuard } from "@/components/em-dash-guard";
 
 import "./globals.css";
@@ -16,8 +17,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Base UI Component System",
-  description: "A Base UI dashboard for shaping the app component library.",
+  title: {
+    default: APP_NAME,
+    template: `%s | ${APP_NAME}`,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

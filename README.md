@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# base-repo-3
 
-## Getting Started
+Next.js 16 app starter with [Base UI](https://base-ui.com) as the only UI primitive layer, styled with Tailwind CSS v4.
 
-First, run the development server:
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Script                     | What it does                          |
+| -------------------------- | ------------------------------------- |
+| `npm run dev`              | Start the dev server                  |
+| `npm run build`            | Production build                      |
+| `npm run lint`             | ESLint                                |
+| `npm run check:em-dashes`  | Fail if any source file has an em dash |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Layout
 
-## Learn More
+```
+src/
+  app/                  Routes: / , /login , /signup
+    globals.css         Theme tokens (light + .dark) and Tailwind setup
+  components/
+    ui/                 Generic widgets built on @base-ui/react (Button, Card, Field, Input, Label, Separator)
+    brand-logo.tsx      App name + placeholder mark
+    login-form.tsx      Shared login / signup card
+    em-dash-guard.tsx   Dev guard against em dashes in rendered text
+  lib/em-dash.ts        Em dash helpers used by the guard and the check script
+```
 
-To learn more about Next.js, take a look at the following resources:
+## UI conventions
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Base UI is the primitive layer.** Widgets in `src/components/ui` wrap `@base-ui/react`. Don't add Radix or another headless library next to it.
+- **Feature code imports from `@/components/ui/*`**, never from `@base-ui/react` directly, so a widget can be restyled or swapped in one place.
+- **Style with theme tokens** (`bg-background`, `text-muted-foreground`, `border-border`, ...) from `globals.css` rather than raw colours, so light and dark mode keep working.
+- **One class helper:** `import { cn } from "cn"`.
+- **Composition uses `render`, not `asChild`:** `<Button nativeButton={false} render={<Link href="/login" />}>Login</Button>`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Adding widgets
 
-## Deploy on Vercel
+`components.json` is set to the `base-nova` style, so the shadcn CLI installs the Base UI version of each component:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npx shadcn@latest add dialog select tabs
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Other UI packs that publish a shadcn-compatible registry can be installed the same way, by namespace or by URL:
+
+```bash
+npx shadcn@latest add @<registry>/<item>
+npx shadcn@latest add https://example.com/r/<item>.json
+```
+
+Before adding from another pack, check that it targets Base UI. A Radix-based item brings `radix-ui` back as a dependency.
+
+To try a different look for the built-in widgets, change `style` in `components.json` to another `base-*` style (for example `base-vega`, `base-maia`, `base-lyra`, `base-mira`) and reinstall them with `npx shadcn@latest add <names> --overwrite`.
