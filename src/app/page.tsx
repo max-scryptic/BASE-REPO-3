@@ -1,3 +1,5 @@
+import { BaseUiDashboard } from "@/components/base-ui/base-ui-dashboard";
+
 export default function Home() {
-  return <div className="flex-1 bg-[#f4f4f4]" />;
+  return <BaseUiDashboard />;
 }
