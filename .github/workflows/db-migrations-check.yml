@@ -1,0 +1,36 @@
+name: DB migrations check
+
+# Runs on every PR. Does not touch any database: it only makes sure the
+# committed migrations in ./drizzle match src/db/schema.ts, so that what
+# gets applied on merge is exactly what was reviewed.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Validate migration history
+        run: npm run db:check
+
+      - name: Fail if schema changes have no migration
+        run: |
+          npm run db:generate
+          if [ -n "$(git status --porcelain -- drizzle)" ]; then
+            git status --short -- drizzle
+            echo "::error::src/db/schema.ts has changes without a committed migration. Run 'npm run db:generate' and commit the files in ./drizzle."
+            exit 1
+          fi

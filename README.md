@@ -17,6 +17,22 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run build`            | Production build                      |
 | `npm run lint`             | ESLint                                |
 | `npm run check:em-dashes`  | Fail if any source file has an em dash |
+| `npm run db:generate`      | Write a migration for schema changes  |
+| `npm run db:migrate`       | Apply pending migrations to `DATABASE_URL` |
+| `npm run db:check`         | Validate the migration history        |
+| `npm run db:studio`        | Browse the database in Drizzle Studio |
+
+## Database
+
+Postgres on [Neon](https://neon.tech), accessed with [Drizzle ORM](https://orm.drizzle.team). Put `DATABASE_URL` in `.env.local` for local work.
+
+1. Edit tables in `src/db/schema.ts`.
+2. Run `npm run db:generate` and commit the new files in `drizzle/` with your PR.
+3. When the PR merges to `main`, the **DB migrate** workflow applies the new migrations to production.
+
+The **DB migrations check** workflow runs on every PR and fails if `schema.ts` was changed without a matching migration. It never touches a database.
+
+One-time setup: in GitHub, go to Settings > Environments, create a `production` environment, and add a `DATABASE_URL` secret holding the Neon connection string. To have someone approve each production migration before it runs, add required reviewers to that environment.
 
 ## Layout
 
