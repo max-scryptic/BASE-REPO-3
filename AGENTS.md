@@ -13,6 +13,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 Search and answer-engine plumbing is already wired up; keep it intact when adding routes. See the "SEO and AEO" section of `README.md` for the full picture.
 
 - **Every public page is registered in `pages` in `src/lib/seo.ts`** with a title and a 120 to 160 character description. That one entry feeds the page's metadata, `sitemap.xml`, `llms.txt` and JSON-LD.
+- **Page titles are pipe-delimited, most specific first, app name last:** `Acme Inc.` (home), `Login | Acme Inc.`, `Invoice 42 | Billing | Acme Inc.`. Never a colon or a dash as the separator. `createMetadata()` builds this; anywhere else (`generateMetadata`, `not-found.tsx`) use `title: { absolute: pageTitle("Invoice 42", "Billing") }`, which also rewrites colons and dashes in titles that come from data. ESLint rejects authored titles that break the rule.
 - **Page metadata comes from `createMetadata(pages.<key>)`.** Don't hand-write `openGraph` or `twitter` objects in a page: Next.js merges metadata shallowly, so a partial object drops the site name, locale and share image.
 - **Render `<PageJsonLd page={pages.<key>} />` in every page body.** Pass extra nodes (`faqJsonLd`, `articleJsonLd`, or a schema-dts typed object) for what the page shows. Only mark up content that is visible on the page.
 - **Pages that should not appear in search** (dashboards, settings, anything behind auth) get `noIndex: true` in the registry, not a `Disallow` in `robots.ts`: a blocked URL is never fetched, so its noindex is never seen.

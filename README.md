@@ -29,6 +29,7 @@ src/
     manifest.ts           "SEO and AEO" below)
     llms.txt/route.ts
     icon.tsx, apple-icon.tsx, opengraph-image.tsx
+    not-found.tsx       Branded 404 (replaces Next's default and its "404: ..." title)
   components/
     ui/                 Generic widgets built on @base-ui/react (Button, Card, Field, Input, Label, Separator)
     brand-logo.tsx      Placeholder mark (also drawn into the favicon and share image)
@@ -82,7 +83,7 @@ What you get, all derived from those:
 
 | Concern | Where | Notes |
 | --- | --- | --- |
-| Title, description, canonical | `createMetadata()` | Title template `Page \| Brand`; canonical is absolute via `metadataBase`. |
+| Title, description, canonical | `createMetadata()`, `pageTitle()` | Titles are pipe-delimited, most specific first: `Login \| Brand`, `Invoice 42 \| Billing \| Brand`. Colons and dashes as separators fail lint and are rewritten at runtime. Canonical is absolute via `metadataBase`. |
 | Open Graph + Twitter/X cards | `createMetadata()`, `opengraph-image.tsx` | 1200x630 generated card on every page, `summary_large_image`. |
 | Robots meta | `robotsFor()` | `max-snippet:-1`, `max-image-preview:large` so AI Overviews and rich results can quote freely. |
 | `robots.txt` | `src/app/robots.ts` | Allows all crawlers, names AI search and AI training bots explicitly (`ALLOW_AI_TRAINING` toggles training only). |
@@ -117,6 +118,8 @@ export default function PricingPage() {
   )
 }
 ```
+
+Titles from data (`generateMetadata` for a post or record) go through `pageTitle()` too: `title: { absolute: pageTitle(post.title, "Blog") }`.
 
 Pages behind auth, or otherwise not worth a search result, get `noIndex: true`: they drop out of the sitemap and `llms.txt` and send `noindex, follow`.
 

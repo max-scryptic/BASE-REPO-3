@@ -18,7 +18,7 @@ type SitemapEntry = MetadataRoute.Sitemap[number]
 export type PageEntry = {
   /** Path from the site root, starting with "/". */
   path: string
-  /** Page title without the site name; the root layout's template adds it. */
+  /** Page name without the app name, which pageTitle() appends. No colons or dashes as separators. */
   title: string
   /** 120 to 160 characters, written as a direct answer to "what is this page?". */
   description: string
@@ -88,6 +88,37 @@ export function robotsFor(noIndex = false): Metadata["robots"] {
   }
 }
 
+/*
+ * Page titles (the browser tab, search result headline and og:title) are
+ * segments joined by a pipe, most specific first and the app name last:
+ *   "Acme Inc."                      the home page
+ *   "Login | Acme Inc."              a top-level page
+ *   "Invoice 42 | Billing | Acme Inc."
+ * Never a colon or a dash as the separator. ESLint rejects authored titles
+ * that use one; pageTitle() also rewrites them, for titles that come from
+ * data (a CMS post called "Launch: what's new" becomes "Launch | what's new").
+ */
+export const TITLE_SEPARATOR = " | "
+
+function normalizeTitleSegment(segment: string) {
+  return segment
+    .replace(/\s*:(?=\s|$)/g, TITLE_SEPARATOR)
+    .replace(/\s+[-\u2013\u2014\u2015]\s+/g, TITLE_SEPARATOR)
+    .replace(/\s*\|\s*/g, TITLE_SEPARATOR)
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+/** Joins title segments with the pipe separator, app name last. */
+export function pageTitle(...segments: string[]) {
+  return [...segments, siteConfig.name]
+    .map(normalizeTitleSegment)
+    .flatMap((segment) => segment.split(TITLE_SEPARATOR))
+    .map((segment) => segment.trim())
+    .filter((segment, index, all) => segment && all.indexOf(segment) === index)
+    .join(TITLE_SEPARATOR)
+}
+
 const twitterAccounts = siteConfig.twitterHandle
   ? { site: siteConfig.twitterHandle, creator: siteConfig.twitterHandle }
   : {}
@@ -127,14 +158,14 @@ export const baseTwitter = {
  * og:site_name, og:locale and twitter:card on every page.
  */
 export function createMetadata(page: PageEntry): Metadata {
-  const isHome = page.path === "/"
-  const fullTitle = isHome ? siteConfig.name : `${page.title} | ${siteConfig.name}`
+  const fullTitle = pageTitle(page.title)
   const images = page.image
     ? [{ ...shareImage, url: page.image, alt: fullTitle }]
     : [shareImage]
 
   return {
-    title: isHome ? { absolute: siteConfig.name } : page.title,
+    // Absolute so the layout's template cannot add a second app name.
+    title: { absolute: fullTitle },
     description: page.description,
     alternates: { canonical: page.path },
     openGraph: {

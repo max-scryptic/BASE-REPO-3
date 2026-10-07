@@ -3,7 +3,12 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import { EmDashGuard } from "@/components/em-dash-guard";
 import { JsonLd } from "@/components/json-ld";
-import { baseOpenGraph, baseTwitter, robotsFor } from "@/lib/seo";
+import {
+  baseOpenGraph,
+  baseTwitter,
+  robotsFor,
+  TITLE_SEPARATOR,
+} from "@/lib/seo";
 import { siteConfig, siteUrl } from "@/lib/site";
 import {
   graph,
@@ -39,7 +44,8 @@ export const metadata: Metadata = {
   metadataBase: siteUrl,
   title: {
     default: siteConfig.name,
-    template: `%s | ${siteConfig.name}`,
+    // Fallback for a page that sets a bare `title` string. Prefer createMetadata().
+    template: `%s${TITLE_SEPARATOR}${siteConfig.name}`,
   },
   description: siteConfig.description,
   applicationName: siteConfig.name,
