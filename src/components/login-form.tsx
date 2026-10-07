@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { cn } from "cn"
 
-import { APP_NAME, BrandLogo } from "@/components/brand-logo"
+import { BrandLogo } from "@/components/brand-logo"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Field, FieldDescription, FieldGroup } from "@/components/ui/field"
+import { siteConfig } from "@/lib/site"
 
 /*
  * One card serves both routes: the copy and the cross-link flip on `mode`,
@@ -39,7 +40,7 @@ export function LoginForm({
             className="mb-8 flex min-h-11 items-center gap-2 px-2 text-lg font-semibold tracking-tight"
           >
             <BrandLogo className="size-11" />
-            {APP_NAME}
+            {siteConfig.name}
           </Link>
           <CardTitle className="text-balance text-2xl">
             {isSignup ? "Create your account" : "Welcome back"}

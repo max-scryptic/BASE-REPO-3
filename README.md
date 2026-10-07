@@ -24,12 +24,22 @@ Open [http://localhost:3000](http://localhost:3000).
 src/
   app/                  Routes: / , /login , /signup
     globals.css         Theme tokens (light + .dark) and Tailwind setup
+    robots.ts           robots.txt, sitemap.xml, manifest, llms.txt, icons and the
+    sitemap.ts            Open Graph image are all generated from src/lib (see
+    manifest.ts           "SEO and AEO" below)
+    llms.txt/route.ts
+    icon.tsx, apple-icon.tsx, opengraph-image.tsx
   components/
     ui/                 Generic widgets built on @base-ui/react (Button, Card, Field, Input, Label, Separator)
-    brand-logo.tsx      App name + placeholder mark
+    brand-logo.tsx      Placeholder mark (also drawn into the favicon and share image)
+    json-ld.tsx         Safe JSON-LD <script> + per-page WebPage/Breadcrumb graph
     login-form.tsx      Shared login / signup card
     em-dash-guard.tsx   Dev guard against em dashes in rendered text
-  lib/em-dash.ts        Em dash helpers used by the guard and the check script
+  lib/
+    site.ts             Brand facts, site URL, indexability
+    seo.ts              Page registry + createMetadata()
+    structured-data.ts  schema.org builders (Organization, WebSite, WebPage, FAQ, Article, ...)
+    em-dash.ts          Em dash helpers used by the guard and the check script
 ```
 
 ## UI conventions
@@ -58,3 +68,61 @@ npx shadcn@latest add https://example.com/r/<item>.json
 Before adding from another pack, check that it targets Base UI. A Radix-based item brings `radix-ui` back as a dependency.
 
 To try a different look for the built-in widgets, change `style` in `components.json` to another `base-*` style (for example `base-vega`, `base-maia`, `base-lyra`, `base-mira`) and reinstall them with `npx shadcn@latest add <names> --overwrite`.
+
+## SEO and AEO
+
+Search engine (SEO) and answer engine (AEO: ChatGPT, Claude, Perplexity, Google AI Overviews) requirements are built in. What you configure:
+
+1. **`src/lib/site.ts`**: name, one-sentence description, locale, brand colours, Twitter/X handle and every official profile URL (`sameAs`).
+2. **`src/components/brand-logo.tsx`**: the mark. The favicon, app icons and share image are drawn from it.
+3. **Environment** (see `.env.example`): `NEXT_PUBLIC_SITE_URL` for non-Vercel hosts, and the search console verification tokens.
+4. **`pages` in `src/lib/seo.ts`**: one entry per public route.
+
+What you get, all derived from those:
+
+| Concern | Where | Notes |
+| --- | --- | --- |
+| Title, description, canonical | `createMetadata()` | Title template `Page \| Brand`; canonical is absolute via `metadataBase`. |
+| Open Graph + Twitter/X cards | `createMetadata()`, `opengraph-image.tsx` | 1200x630 generated card on every page, `summary_large_image`. |
+| Robots meta | `robotsFor()` | `max-snippet:-1`, `max-image-preview:large` so AI Overviews and rich results can quote freely. |
+| `robots.txt` | `src/app/robots.ts` | Allows all crawlers, names AI search and AI training bots explicitly (`ALLOW_AI_TRAINING` toggles training only). |
+| `sitemap.xml` | `src/app/sitemap.ts` | From the page registry. Only set `lastModified` when you know it. |
+| `llms.txt` | `src/app/llms.txt/route.ts` | [llmstxt.org](https://llmstxt.org) map of the site for AI agents, from the same registry. |
+| Structured data | `src/lib/structured-data.ts` | Organization + WebSite site-wide, WebPage + BreadcrumbList per page, linked by `@id`. FAQPage and Article builders ready to use. |
+| Favicon, app icons, manifest | `icon.tsx`, `apple-icon.tsx`, `manifest.ts` | 192px favicon (Google wants a multiple of 48px), `/favicon.ico` rewritten to it. |
+| Search console verification | `GOOGLE_`, `BING_`, `YANDEX_SITE_VERIFICATION` | Rendered as meta tags when set. |
+| Preview deployments | `isIndexable` | Anything but Vercel production (or a non-Vercel production build) sends `noindex` in meta, `X-Robots-Tag` and `robots.txt`. |
+
+### Adding a page
+
+```ts
+// src/lib/seo.ts
+pricing: {
+  path: "/pricing",
+  title: "Pricing",
+  description: "Acme plans start free; paid plans add ... Compare features and limits.",
+},
+```
+
+```tsx
+// src/app/pricing/page.tsx
+export const metadata = createMetadata(pages.pricing)
+
+export default function PricingPage() {
+  return (
+    <main>
+      <PageJsonLd page={pages.pricing} nodes={[faqJsonLd(pages.pricing, faqs)]} />
+      ...
+    </main>
+  )
+}
+```
+
+Pages behind auth, or otherwise not worth a search result, get `noIndex: true`: they drop out of the sitemap and `llms.txt` and send `noindex, follow`.
+
+### After launch (outside the code)
+
+- Verify the domain in [Google Search Console](https://search.google.com/search-console) and [Bing Webmaster Tools](https://www.bing.com/webmasters) (ChatGPT search and Copilot draw on Bing's index), and submit `/sitemap.xml` to both.
+- Check a page in the [Rich Results Test](https://search.google.com/test/rich-results) and a share link in the X and LinkedIn post inspectors.
+- Keep the brand name, description and `sameAs` profiles identical everywhere the brand appears; answer engines reconcile entities across sources.
+- Write answer-first copy: one `<h1>` per page, a direct answer under each heading, question-style headings and visible FAQs where people actually ask questions.
