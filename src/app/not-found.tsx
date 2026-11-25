@@ -7,9 +7,12 @@ import { pageTitle, robotsFor } from "@/lib/seo"
 
 // Replaces Next's built-in 404, whose "404: This page could not be found."
 // title breaks the pipe-delimited title rule. The robots override stops the
-// root layout's "index, follow" contradicting the noindex Next adds to 404s.
+// root layout's "index, follow" contradicting the noindex Next adds to 404s,
+// and the canonical is cleared so a missing URL does not claim to be the home
+// page (it would otherwise inherit the layout's canonical of "/").
 export const metadata: Metadata = {
   title: { absolute: pageTitle("Page not found") },
+  alternates: { canonical: null },
   robots: robotsFor(true),
 }
 

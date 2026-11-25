@@ -42,7 +42,7 @@ export function LoginForm({
             <BrandLogo className="size-11" />
             {siteConfig.name}
           </Link>
-          <CardTitle className="text-balance text-2xl">
+          <CardTitle as="h1" className="text-balance text-2xl">
             {isSignup ? "Create your account" : "Welcome back"}
           </CardTitle>
           {isSignup && (
