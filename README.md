@@ -14,9 +14,10 @@ Open [http://localhost:3000](http://localhost:3000).
 | Script                     | What it does                          |
 | -------------------------- | ------------------------------------- |
 | `npm run dev`              | Start the dev server                  |
-| `npm run build`            | Production build                      |
+| `npm run build`            | Production build, then the SEO check  |
 | `npm run lint`             | ESLint                                |
 | `npm run check:em-dashes`  | Fail if any source file has an em dash |
+| `npm run check:seo`        | Re-run the SEO check on the last build |
 
 ## Layout
 
@@ -83,11 +84,12 @@ What you get, all derived from those:
 
 | Concern | Where | Notes |
 | --- | --- | --- |
-| Title, description, canonical | `createMetadata()`, `pageTitle()` | Titles are pipe-delimited, most specific first: `Login \| Brand`, `Invoice 42 \| Billing \| Brand`. Colons and dashes as separators fail lint and are rewritten at runtime. Canonical is absolute via `metadataBase`. |
+| Title, description, canonical | `createMetadata()`, `pageTitle()`, `searchTitle()` | Titles are pipe-delimited, most specific first: `Login \| Brand`, `Invoice 42 \| Billing \| Brand`. Colons and dashes as separators fail lint and are rewritten at runtime. Full titles are 15 to 70 characters, descriptions 120 to 160; the registry fails the build otherwise. Canonical is absolute via `metadataBase`. |
+| Search engine rules | `scripts/check-seo.mjs` | Runs after `npm run build` on the prerendered HTML: lengths, one `<h1>`, no skipped heading levels, `alt` on images, crawlable links, canonicals, JSON-LD, sitemap `<lastmod>`. HTML over 125 KB is a warning only. See the Bing section of `AGENTS.md`. |
 | Open Graph + Twitter/X cards | `createMetadata()`, `opengraph-image.tsx` | 1200x630 generated card on every page, `summary_large_image`. |
 | Robots meta | `robotsFor()` | `max-snippet:-1`, `max-image-preview:large` so AI Overviews and rich results can quote freely. |
 | `robots.txt` | `src/app/robots.ts` | Allows all crawlers, names AI search and AI training bots explicitly (`ALLOW_AI_TRAINING` toggles training only). |
-| `sitemap.xml` | `src/app/sitemap.ts` | From the page registry. Only set `lastModified` when you know it. |
+| `sitemap.xml` | `src/app/sitemap.ts` | From the page registry. Every indexable page needs a `lastModified`: the date its content last changed, never the build time. |
 | `llms.txt` | `src/app/llms.txt/route.ts` | [llmstxt.org](https://llmstxt.org) map of the site for AI agents, from the same registry. |
 | Structured data | `src/lib/structured-data.ts` | Organization + WebSite site-wide, WebPage + BreadcrumbList per page, linked by `@id`. FAQPage and Article builders ready to use. |
 | Favicon, app icons, manifest | `icon.tsx`, `apple-icon.tsx`, `manifest.ts` | 192px favicon (Google wants a multiple of 48px), `/favicon.ico` rewritten to it. |
@@ -102,6 +104,7 @@ pricing: {
   path: "/pricing",
   title: "Pricing",
   description: "Acme plans start free; paid plans add ... Compare features and limits.",
+  lastModified: "2026-11-25",
 },
 ```
 
@@ -119,7 +122,7 @@ export default function PricingPage() {
 }
 ```
 
-Titles from data (`generateMetadata` for a post or record) go through `pageTitle()` too: `title: { absolute: pageTitle(post.title, "Blog") }`.
+Titles from data (`generateMetadata` for a post or record) go through `searchTitle()`, which pipe-delimits like `pageTitle()` and keeps the result within 70 characters: `title: { absolute: searchTitle(post.title, "Blog") }`. A registry title that is too long fails the build instead; give the entry a shorter `searchTitle`.
 
 Pages behind auth, or otherwise not worth a search result, get `noIndex: true`: they drop out of the sitemap and `llms.txt` and send `noindex, follow`.
 

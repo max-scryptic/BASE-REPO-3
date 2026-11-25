@@ -43,9 +43,29 @@ const JSX_TITLE_RULE = {
   message: TITLE_MESSAGE,
 };
 
+// Bing Webmaster Guidelines, at the source level: alt text on images, links
+// with a real href and descriptive text, headings with content. Errors rather
+// than Next's default warnings. scripts/check-seo.mjs checks the same in the
+// built HTML, plus what only shows up there (one <h1>, no heading skips).
+const SEARCH_RULES = {
+  "jsx-a11y/alt-text": [
+    "error",
+    { elements: ["img", "area", "input[type=\"image\"]"], img: ["Image"] },
+  ],
+  "jsx-a11y/anchor-has-content": "error",
+  "jsx-a11y/anchor-is-valid": [
+    "error",
+    { components: ["Link"], specialLink: ["href"], aspects: ["noHref", "invalidHref"] },
+  ],
+  "jsx-a11y/heading-has-content": "error",
+  "jsx-a11y/html-has-lang": "error",
+  "jsx-a11y/img-redundant-alt": "error",
+};
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  { rules: SEARCH_RULES },
   {
     rules: {
       "no-restricted-syntax": [
