@@ -21,6 +21,7 @@ Search and answer-engine plumbing is already wired up; keep it intact when addin
 - **Brand facts live in `src/lib/site.ts`** (name, description, colours, social profiles). Don't hard-code the site name or URL anywhere else.
 - **One `<h1>` per page and no skipped heading levels** (`<h2>` then `<h4>` fails the build), semantic landmarks (`<main>`, `<nav>`, `<article>`), descriptive link text and an `alt` on every `<img>` (`alt=""` for decorative ones). A card that leads the page uses `<CardTitle as="h1">`.
 - **`npm run build` runs `scripts/check-seo.mjs` afterwards** against the prerendered HTML: title and description lengths, one `<h1>`, heading order, `alt`, crawlable links, canonicals, JSON-LD that parses, and a `<lastmod>` on every sitemap entry. Errors fail the build. Fix the page, never loosen the limits to get green. Routes rendered on request have no prerendered HTML, so check those by hand.
+- **Before finishing any work that adds or changes a page, run `npm run lint` and `npm run build`** and fix every error they report. No CI runs these, and Vercel skips `claude/*` branches, so this is the only check before merge.
 - Write copy answer-first: lead each section with the direct answer in a sentence or two, then the detail. Answer engines quote the first clear statement they find.
 
 # Bing
